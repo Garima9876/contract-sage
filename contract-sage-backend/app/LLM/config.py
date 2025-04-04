@@ -92,17 +92,14 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 import os
-import nltk
 
-# Add these downloads once at app startup
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
 @dataclass
 class AppConfig:
     SEGMENTATION_MODEL_PATH: str = 'law-ai/InLegalBERT'
     LLM_MODEL_PATH: str = 'mistralai/Mistral-7B-v0.1'
     LLM_ADAPTER_PATH: str = 'ajay-drew/Mistral-7B-Indian-Law'
     NER_MODEL_PATH: str = 'FacebookAI/xlm-roberta-base'
+    POS_TAGGER_MODEL: str = 'vblagoje/bert-english-uncased-finetuned-pos'
     USE_CUDA: bool = True
     USE_MPS: bool = True
     MAX_TOKENS: int = 512

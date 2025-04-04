@@ -24,7 +24,8 @@
 #     import uvicorn
 #     uvicorn.run(app, host="0.0.0.0", port=8000)
 
-# api.py
+# Add these lines at the top of api.py, before any other imports
+# api.py (modified version)
 from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -33,13 +34,19 @@ import logging
 import time
 import asyncio
 from contextlib import asynccontextmanager
-
-# Setup logging
+from config import config
+import sys
+import os
+sys.path.append(os.path.dirname(__file__))
+# Remove these lines:
+# from nltk_patch import apply_nltk_patches
+# apply_nltk_patches()
+from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Store background tasks
 processing_tasks = {}
+from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
+# ... rest of the file remains unchanged
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
