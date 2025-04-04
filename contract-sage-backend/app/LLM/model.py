@@ -28,6 +28,8 @@ from transformers import AutoModel, AutoTokenizer, AutoModelForCausalLM, AutoMod
 from peft import PeftModel
 from typing import Dict, Any, List, Tuple, Optional
 import logging
+from config import config
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

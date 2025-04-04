@@ -2,30 +2,29 @@
 import torch
 from typing import List, Dict, Tuple, Any
 import logging
+from config import config
+from model import model_manager
+from utils import clean_and_split, get_lemmatized_text, get_pos_features
+from ner import extract_named_entities
+    
 
 logger = logging.getLogger(__name__)
 
 def segment_legal_document(document: str) -> Tuple[List[Dict[str, str]], Dict[str, List[str]]]:
-    """Segment a legal document into its rhetorical categories and extract entities.
-    
-    Args:
-        document: The raw legal document text
-        
-    Returns:
-        Tuple containing:
-            - List of dictionaries mapping sentences to their segment types
-            - Dictionary of named entities
-    """
-    from config import config
-    from model import model_manager
-    from utils import clean_and_split
-    from ner import extract_named_entities
-    
-    # Clean and split document into sentences
+
     sentences = clean_and_split(document)
     if not sentences:
-        logger.warning("No sentences found after preprocessing")
-        return [], {}
+        logger.warning('No sentences found after preprocessing')
+        return ([], {})
+    
+    # Enhance with lemmatization
+    lemmatized_sentences = [get_lemmatized_text(s) for s in sentences]
+    
+    # Get POS features for additional context
+    pos_features = [get_pos_features(s) for s in sentences]
+    
+    logger.info('Extracting named entities')
+    named_entities = extract_named_entities(document)
     
     # Extract named entities
     logger.info("Extracting named entities")

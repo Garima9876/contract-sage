@@ -101,6 +101,11 @@ from nltk.tokenize import sent_tokenize
 from typing import List, Dict, Any, Optional
 import logging
 
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+from nltk.tag import pos_tag
+from nltk.tokenize import word_tokenize
+import numpy as np
+
 logger = logging.getLogger(__name__)
 
 def ensure_nltk_resources():
@@ -199,5 +204,31 @@ def extract_key_points(summary_text: str) -> Dict[str, Any]:
     }
 
 
+def ensure_nltk_resources():
+    try:
+        nltk.data.find('tokenizers/punkt')
+        nltk.data.find('corpora/wordnet')
+        nltk.data.find('taggers/averaged_perceptron_tagger')
+    except LookupError:
+        nltk.download('punkt', quiet=True)
+        nltk.download('wordnet', quiet=True)
+        nltk.download('averaged_perceptron_tagger', quiet=True)
 
+def get_lemmatized_text(text):
+    """Lemmatize text to normalize word forms"""
+    ensure_nltk_resources()
+    lemmatizer = WordNetLemmatizer()
+    words = word_tokenize(text)
+    return ' '.join([lemmatizer.lemmatize(word) for word in words])
+
+def get_pos_features(text):
+    """Extract part-of-speech features from text"""
+    ensure_nltk_resources()
+    tokens = word_tokenize(text)
+    pos_tags = pos_tag(tokens)
+    # Count occurrences of different POS tags
+    pos_counts = {}
+    for _, tag in pos_tags:
+        pos_counts[tag] = pos_counts.get(tag, 0) + 1
+    return pos_counts
 
