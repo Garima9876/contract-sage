@@ -16,7 +16,7 @@ const FileUpload = ({ onSummary }) => {
     try {
       const response = await uploadAndSummarizeFile(file);
       toast.success("File processed successfully!");
-      onSummary(response.data.summary);
+      onSummary(response.data.llm_results);
     } catch (error) {
       toast.error(
         error.response?.data?.detail || "Error processing the file."

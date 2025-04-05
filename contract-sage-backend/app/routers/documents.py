@@ -1,8 +1,10 @@
 # app/routers/documents.py
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi.responses import JSONResponse
 from app.schemas.document import DocumentRead
 from app.models.document import Document
 from app.database import SessionLocal, engine, Base
+from typing import List
 from sqlalchemy.orm import Session
 import shutil
 import os
@@ -50,12 +52,6 @@ async def upload_document(
     
     # ----- Call LLM functions sequentially -----
     try:
-        # Summarization
-        from app.LLM.summarizer import summarize_legal_text
-        summary_result = summarize_legal_text(content, focus_sections=focus)
-        if "error" in summary_result:
-            raise HTTPException(status_code=500, detail=summary_result["error"])
-        
         # Segmentation
         from app.LLM.segmenter import segment_legal_document
         segmented_doc, segmentation_entities = segment_legal_document(content)
@@ -72,14 +68,19 @@ async def upload_document(
         sentences = clean_and_split(content)
         if not sentences:
             raise HTTPException(status_code=400, detail="Could not extract sentences from text")
-        anomaly_result = anomaly_detector.detect_anomalies(sentences, threshold=0.5)  # Adjust threshold as needed
+        anomaly_result = anomaly_detector.detect_anomalies(sentences, threshold=0.5)
+        
+        # Summarization
+        # from app.LLM.summarizer import summarize_legal_text
+        # summary_result = summarize_legal_text(content, focus_sections=focus)
+        # if "error" in summary_result:
+        #     raise HTTPException(status_code=500, detail=summary_result["error"])
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error in LLM processing: {str(e)}")
     
     # Combine all LLM results into a single dictionary for frontend display
     combined_result = {
-        "summary": summary_result.get("summary", "No summary available"),
         "segmentation": {
             "segments": segmented_doc,
             "entities": segmentation_entities,
@@ -93,18 +94,38 @@ async def upload_document(
         "anomalies": {
             "anomalies": anomaly_result.get("anomalies", []),
             "stats": anomaly_result.get("stats", {})
-        }
+        },
+        # "summary": summary_result.get("summary", "No summary available"),
     }
     
     # Create a new document record with the summary (you might choose to store the combined result as JSON in another field)
+    # new_doc = Document(
+    #     filename=file.filename,
+    #     summary=combined_result.get("summary", "No summary available"),
+    #     user_id=1  # Replace with actual authenticated user ID when implementing authentication
+    # )
+    # db.add(new_doc)
+    # db.commit()
+    # db.refresh(new_doc)
+    
+    # Create a document record
     new_doc = Document(
         filename=file.filename,
-        summary=combined_result.get("summary", "No summary available"),
-        user_id=1  # Replace with actual authenticated user ID when implementing authentication
+        summary="Summary not generated",  # Just placeholder
+        user_id=1  # Dummy user ID
     )
     db.add(new_doc)
     db.commit()
     db.refresh(new_doc)
+
+    return JSONResponse(status_code=200, content={
+        "document": {
+            "id": new_doc.id,
+            "filename": new_doc.filename,
+            "summary": new_doc.summary
+        },
+        "llm_results": combined_result
+    })
     
     # Optionally, you could update new_doc with the combined result before returning it,
     # or simply return the combined_result along with new_doc.id.
@@ -124,6 +145,11 @@ async def upload_document(
         "llm_results": combined_result
     })
     
+@router.get("/documents", response_model=List[DocumentRead])
+async def get_all_documents(db: Session = Depends(get_db)):
+    documents = db.query(Document).all()
+    return documents
+
 @router.get("/{document_id}", response_model=DocumentRead)
 async def get_document(document_id: int, db: Session = Depends(get_db)):
     doc = db.query(Document).filter(Document.id == document_id).first()

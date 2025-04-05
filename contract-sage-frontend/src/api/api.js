@@ -32,30 +32,8 @@ export const uploadAndSummarizeFile = (file) => {
       },
     });
   };
-  
 
+// ========== GET DOCUMENTS ==========
 
-// ========== TEXT SUMMARIZATION ==========
-
-// Summarize raw text
-export const summarizeText = (text) =>
-  API.post('/summarize/text', { text });
-
-
-// ========== FRAUD DETECTION ==========
-
-// Detect fraud in uploaded file
-export const detectFraudInFile = (file) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  return API.post('/detect/', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-};
-
-// Detect fraud in raw text
-export const detectFraudInText = (text) =>
-  API.post('/detect/text', { text });
-
+// Fetch all uploaded documents
+export const getAllDocuments = () => API.get('/api/documents/documents');
