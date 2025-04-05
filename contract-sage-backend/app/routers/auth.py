@@ -5,8 +5,26 @@ from app.models.user import User
 from app.database import SessionLocal, engine, Base
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
+from fastapi.responses import JSONResponse
+from fastapi.responses import RedirectResponse
+from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
+from datetime import datetime, timedelta
+from pydantic import BaseModel, EmailStr
+import uuid
 import jwt
 import time
+import asyncio
+
+conf = ConnectionConfig(
+    MAIL_USERNAME="diptimahakalkar21@gmail.com",
+    MAIL_PASSWORD="ferr zhmu zegy ktdm",  # Use App Password, not your Gmail password
+    MAIL_FROM="diptimahakalkar21@gmail.com",
+    MAIL_PORT=587,
+    MAIL_SERVER="smtp.gmail.com",
+    MAIL_STARTTLS=True,
+    MAIL_SSL_TLS=False,
+    USE_CREDENTIALS=True
+)
 
 # Ensure tables exist (for demo purposes)
 Base.metadata.create_all(bind=engine)
@@ -24,29 +42,84 @@ def get_db():
     finally:
         db.close()
 
-@router.post("/register", response_model=UserRead)
-def register(user: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.email == user.email).first()
-    if existing_user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+async def send_activation_email(email: EmailStr, activation_link: str):
+    message = MessageSchema(
+        subject="Activate Your Contract Sage Account",
+        recipients=[email],
+        body=(
+            f"Dear User,\n\n"
+            f"Thank you for registering with Contract Sage.\n\n"
+            f"To activate your account, please click the link below:\n"
+            f"{activation_link}\n\n"
+            f"If you did not register for this account, please ignore this email.\n\n"
+            f"Best regards,\n"
+            f"The Contract Sage Team"
+        ),
+        subtype="plain"
+    )
+
+    fm = FastMail(conf)
+    await fm.send_message(message)
+
+class RegisterRequest(BaseModel):
+    email: EmailStr
+
+@router.post("/register")
+async def register(payload: RegisterRequest):
+    email = payload.email
+
+    token_data = {
+        "email": email,
+        "exp": datetime.utcnow() + timedelta(hours=1)
+    }
+    activation_jwt = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
+
+    activation_link = f"http://localhost:5173/auth/activate?token={activation_jwt}"
+    await send_activation_email(email, activation_link)
     
-    hashed_password = pwd_context.hash(user.password)
-    new_user = User(email=user.email, hashed_password=hashed_password)
+    return {"message": "Activation link sent to your email"}
+
+@router.post("/activate")
+def activate_user(token: str, password: str, db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("email")
+        if email is None:
+            raise HTTPException(status_code=400, detail="Invalid token")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Activation link expired")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=400, detail="Invalid activation token")
+
+    existing_user = db.query(User).filter(User.email == email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Account already activated")
+
+    hashed_password = pwd_context.hash(password)
+    new_user = User(
+        email=email,
+        hashed_password=hashed_password,
+        is_active=True,
+        activation_token=None
+    )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return new_user
+
+    return {"message": "Account activated successfully"}
 
 @router.post("/login")
 def login(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.email == user.email).first()
     if not db_user or not pwd_context.verify(user.password, db_user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not db_user.is_active:
+        raise HTTPException(status_code=403, detail="Account not activated")
+
     token_data = {
         "sub": db_user.email,
         "id": db_user.id,
-        "exp": time.time() + 3600  # 1 hour expiration
+        "exp": time.time() + 3600
     }
     token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
     return {"access_token": token, "token_type": "bearer"}

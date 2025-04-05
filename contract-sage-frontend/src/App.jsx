@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./components/Login";
 import Register from "./components/Register";
+import Activate from "./components/Activate";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
@@ -43,6 +44,7 @@ function App() {
               element={<Login onLogin={(tok) => setToken(tok)} />}
             />
             <Route path="register" element={<Register />} />
+            <Route path="activate" element={<Activate />} />
           </Route>
         </Routes>
       </Router>

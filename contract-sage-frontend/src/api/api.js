@@ -7,10 +7,16 @@ const API = axios.create({
 
 // ========== AUTH ROUTES ==========
 
-// Register user
-export const registerUser = (userData) => API.post("/api/auth/register", userData);
+// Register user with just email
+export const registerUser = (email) => API.post("/api/auth/register", { email });
 
-// Login user
+// Activate account using token and new password
+export const activateUser = (token, password) => 
+  API.post("/api/auth/activate", null, {
+    params: { token, password }
+  });
+
+// Login user with email and password
 export const loginUser = (credentials) => API.post("/api/auth/login", credentials);
 
 
