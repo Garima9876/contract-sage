@@ -63,7 +63,7 @@ const Activate = () => {
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
         <PrimaryButton type="submit" label="Activate Account" className="w-full" />
-
+      </form>
         <p className="mt-5 text-center">
         Back to{" "}
         <button
@@ -73,7 +73,6 @@ const Activate = () => {
           Login
         </button>
       </p>
-      </form>
     </div>
   );
 };
