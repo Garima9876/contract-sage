@@ -472,7 +472,6 @@ from peft import PeftModel, PeftConfig
 from typing import Dict, Any, List, Tuple, Optional
 import logging
 from .config import config
-import os
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -485,8 +484,12 @@ class LegalSemanticSegmentation(nn.Module):
         self.classifier = nn.Linear(bert_model.config.hidden_size, num_labels)
 
     def forward(self, input_ids, attention_mask=None, token_type_ids=None):
-        outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask, 
-                          token_type_ids=token_type_ids, return_dict=True)
+        outputs = self.bert(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            return_dict=True
+        )
         cls_output = outputs.last_hidden_state[:, 0, :]
         cls_output = self.dropout(cls_output)
         logits = self.classifier(cls_output)
@@ -503,12 +506,12 @@ class ModelManager:
         self._ner_model = None
 
     def validate_device_setup(self):
-        logger.info(f'Current device configuration: {self.config.device}')
+        logger.info(f"Current device configuration: {self.config.device}")
         if self.config.device == 'mps':
             if not hasattr(torch.backends, 'mps'):
-                logger.warning('MPS not available in this PyTorch build')
+                logger.warning("MPS not available in this PyTorch build")
             elif not torch.backends.mps.is_available():
-                logger.warning('MPS not available on this hardware')
+                logger.warning("MPS not available on this hardware")
 
     @property
     def seg_tokenizer(self):
@@ -539,13 +542,9 @@ class ModelManager:
         if self._llm_tokenizer is None:
             logger.info(f'Loading LLM tokenizer from {self.config.LLM_MODEL_PATH}')
             try:
-                self._llm_tokenizer = AutoTokenizer.from_pretrained(
-                    self.config.LLM_MODEL_PATH,
-                    padding_side='left',
-                    pad_token='<pad>'  # Explicit pad token
-                )
-                if self._llm_tokenizer.pad_token is None:
-                    self._llm_tokenizer.pad_token = self._llm_tokenizer.eos_token
+                self._llm_tokenizer = AutoTokenizer.from_pretrained(self.config.LLM_MODEL_PATH)
+                self._llm_tokenizer.padding_side = 'left'
+                self._llm_tokenizer.pad_token = self._llm_tokenizer.eos_token
             except Exception as e:
                 logger.error(f'Failed to load LLM tokenizer: {e}')
                 raise
@@ -554,49 +553,32 @@ class ModelManager:
     @property
     def llm_model(self):
         if self._llm_model is None:
-            logger.info(f'Loading LLM model from {self.config.LLM_MODEL_PATH} with adapter {self.config.LLM_ADAPTER_PATH}')
+            logger.info(f'Loading LLM model from {self.config.LLM_MODEL_PATH}')
+            self.validate_device_setup()
             try:
-                # Base model with MPS optimization
-                base_model = AutoModelForCausalLM.from_pretrained(
-                    self.config.LLM_MODEL_PATH,
-                    device_map=self.config.device_map,
-                    torch_dtype=torch.float16,
-                    offload_folder=self.config.OFFLOAD_FOLDER,
-                    low_cpu_mem_usage=True
-                )
-                
-                # Adapter loading with proper device placement
-                self._llm_model = PeftModel.from_pretrained(
-                    base_model,
-                    self.config.LLM_ADAPTER_PATH,
-                    device_map=self.config.device_map
-                ).to(self.config.device)
-                
-                self._llm_model.eval()
-                
-                if self.config.device == 'mps':
-                    torch.mps.empty_cache()
-                    logger.info('Optimized for MPS with memory management')
-                    
+                if self.config.device != 'cpu':
+                    self._llm_model = AutoModelForCausalLM.from_pretrained(
+                        self.config.LLM_MODEL_PATH,
+                        device_map="auto",
+                        torch_dtype=torch.float16,
+                        offload_folder="./offload"
+                    )
+                else:
+                    raise RuntimeError("Skipping MPS for now")
+    
             except Exception as e:
-                logger.error(f'Model loading failed: {e}. Attempting CPU fallback...')
+                logger.error(f'Primary loading failed: {e}. Attempting CPU fallback...')
                 try:
-                    base_model = AutoModelForCausalLM.from_pretrained(
+                    self._llm_model = AutoModelForCausalLM.from_pretrained(
                         self.config.LLM_MODEL_PATH,
                         device_map='cpu',
                         torch_dtype=torch.float32
                     )
-                    self._llm_model = PeftModel.from_pretrained(
-                        base_model,
-                        self.config.LLM_ADAPTER_PATH,
-                        device_map='cpu'
-                    ).eval()
-                    logger.warning('Running on CPU - performance will be slower')
+                    self._llm_model.eval()
                 except Exception as fallback_e:
                     logger.error(f'CPU fallback failed: {fallback_e}')
                     raise RuntimeError(f'Failed to load model: {fallback_e}')
         return self._llm_model
-
     @property
     def ner_tokenizer(self):
         if self._ner_tokenizer is None:
@@ -622,4 +604,4 @@ class ModelManager:
                 raise
         return self._ner_model
 
-model_manager = ModelManager(config) 
+model_manager = ModelManager(config)

@@ -173,6 +173,7 @@ class AppConfig:
     TEMPERATURE: float = 0.7
     BATCH_SIZE: int = 8
     SEGMENT_LABELS: List[str] = field(default_factory=lambda: ['FACTS', 'ARGUMENTS', 'STATUTE', 'PRECEDENT', 'RATIO', 'RULING', 'OTHER'])
+    OFFLOAD_FOLDER = os.getenv("OFFLOAD_FOLDER", "./offload")
 
     @property
     def device(self) -> str:
