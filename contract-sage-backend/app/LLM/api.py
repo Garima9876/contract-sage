@@ -34,7 +34,7 @@
 # # # import time
 # # # import asyncio
 # # # from contextlib import asynccontextmanager
-# # # from config import config
+# # # from .config import config
 # # # import sys
 # # # import os
 # # # sys.path.append(os.path.dirname(__file__))
@@ -51,7 +51,7 @@
 # # # @asynccontextmanager
 # # # async def lifespan(app: FastAPI):
 # # #     # Startup: Load resources
-# # #     from model import model_manager
+# # #     from .model import model_manager
 # # #     logger.info("Preloading tokenizers...")
 # # #     # Just access the properties to trigger loading
 # # #     _ = model_manager.seg_tokenizer
@@ -188,7 +188,7 @@
 # # import time
 # # import asyncio
 # # from contextlib import asynccontextmanager
-# # from config import config
+# # from .config import config
 # # import sys
 # # import os
 # # import torch
@@ -201,7 +201,7 @@
 
 # # @asynccontextmanager
 # # async def lifespan(app: FastAPI):
-# #     from model import model_manager
+# #     from .model import model_manager
 # #     import torch
     
 # #     # Initialize device and clear cache
@@ -335,7 +335,7 @@
 
 # # @app.get('/health')
 # # async def health_check():
-# #     from model import model_manager
+# #     from .model import model_manager
 # #     try:
 # #         # Basic health check - verify models are loaded
 # #         assert model_manager.llm_model is not None
@@ -360,7 +360,7 @@
 # import time
 # import asyncio
 # from contextlib import asynccontextmanager
-# from config import config
+# from .config import config
 # import sys
 # import os
 
@@ -372,7 +372,7 @@
 
 # @asynccontextmanager
 # async def lifespan(app: FastAPI):
-#     from model import model_manager
+#     from .model import model_manager
     
 #     # Initialize device and clear cache
 #     logger.info(f'Initializing with device: {config.device}')
@@ -505,7 +505,7 @@
 
 # @app.get('/health')
 # async def health_check():
-#     from model import model_manager
+#     from .model import model_manager
 #     try:
 #         assert model_manager.llm_model is not None
 #         assert model_manager.seg_model is not None
@@ -528,7 +528,7 @@ import logging
 import time
 import asyncio
 from contextlib import asynccontextmanager
-from config import config
+from .config import config
 import sys
 import os
 sys.path.append(os.path.dirname(__file__))
@@ -539,7 +539,7 @@ processing_tasks = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from model import model_manager
+    from .model import model_manager
     logger.info(f'Initializing with device: {config.device}')
     if config.device == 'mps' and hasattr(torch.backends, 'mps'):
         torch.mps.empty_cache()
@@ -609,7 +609,7 @@ async def summarize_text(
 async def extract_entities(file: UploadFile = File(...)):
     """Endpoint for NER extraction without summarization"""
     try:
-        from ner import extract_named_entities
+        from .ner import extract_named_entities
         from utils import clean_and_split
         
         content = (await file.read()).decode('utf-8')
@@ -644,7 +644,7 @@ async def full_analysis(file: UploadFile = File(...)):
 
 @app.get('/health')
 async def health_check():
-    from model import model_manager
+    from .model import model_manager
     try:
         assert model_manager.llm_model is not None
         assert model_manager.seg_model is not None

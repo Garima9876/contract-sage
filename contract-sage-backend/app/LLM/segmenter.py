@@ -2,10 +2,10 @@
 import torch
 from typing import List, Dict, Tuple, Any
 import logging
-from config import config
-from model import model_manager
-from utils import clean_and_split, get_lemmatized_text, get_pos_features
-from ner import extract_named_entities
+from .config import config
+from .model import model_manager
+from .utils import clean_and_split, get_lemmatized_text, get_pos_features
+from .ner import extract_named_entities
     
 
 logger = logging.getLogger(__name__)

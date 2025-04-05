@@ -38,8 +38,8 @@ def extract_named_entities(text: str) -> Dict[str, List[str]]:
     Returns:
         Dictionary mapping entity types to lists of entity values
     """
-    from config import config
-    from model import model_manager
+    from .config import config
+    from .model import model_manager
     
     try:
         # Initialize NER pipeline

@@ -28,7 +28,7 @@
 # # # from peft import PeftModel
 # # # from typing import Dict, Any, List, Tuple, Optional
 # # # import logging
-# # # from config import config
+# # # from .config import config
 
 
 # # # # Set up logging
@@ -173,7 +173,7 @@
 # # from peft import PeftModel, PeftConfig
 # # from typing import Dict, Any, List, Tuple, Optional
 # # import logging
-# # from config import config
+# # from .config import config
 
 # # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 # # logger = logging.getLogger(__name__)
@@ -331,7 +331,7 @@
 # from peft import PeftModel, PeftConfig
 # from typing import Dict, Any, List, Tuple, Optional
 # import logging
-# from config import config
+# from .config import config
 
 # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 # logger = logging.getLogger(__name__)
@@ -471,7 +471,7 @@ from transformers import AutoModel, AutoTokenizer, AutoModelForCausalLM, AutoMod
 from peft import PeftModel, PeftConfig
 from typing import Dict, Any, List, Tuple, Optional
 import logging
-from config import config
+from .config import config
 import os
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

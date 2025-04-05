@@ -1,19 +1,34 @@
 import React, { useState } from 'react';
+import { uploadAndSummarizeFile } from '../api/api';
+import { toast } from "react-toastify";
 
-const FileUpload = ({ onFileSelect }) => {
+const FileUpload = ({ onSummary }) => {
   const [fileName, setFileName] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setFileName(file.name);
-      onFileSelect(file);
+    if (!file) return;
+
+    setFileName(file.name);
+    setLoading(true);
+
+    try {
+      const response = await uploadAndSummarizeFile(file);
+      toast.success("File processed successfully!");
+      onSummary(response.data.summary);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.detail || "Error processing the file."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex flex-col items-center space-y-4">
-      <label className="w-full text-center cursor-pointer bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300">
+      <label className="w-full text-center cursor-pointer bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300">
         Upload Legal Document
         <input
           type="file"
@@ -24,9 +39,10 @@ const FileUpload = ({ onFileSelect }) => {
       </label>
       {fileName && (
         <p className="text-gray-700 font-medium">
-          📄 Selected file: <span className="text-green-700">{fileName}</span>
+          📄 Selected file: <span className="text-sky-700">{fileName}</span>
         </p>
       )}
+      {loading && <p className="text-sm text-gray-500">Processing file...</p>}
     </div>
   );
 };

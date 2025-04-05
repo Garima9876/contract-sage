@@ -1,29 +1,52 @@
-import React from "react";
-import FileUpload from "./components/FileUpload";
-import SummaryDisplay from "./components/SummaryDisplay";
+// src/App.jsx
+import React, { useState, useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import AuthPage from "./pages/AuthPage"; // a layout component for auth routes
+import Dashboard from "./pages/Dashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./components/Login";
+import Register from "./components/Register";
 
 function App() {
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
+
+  // Persist token changes in localStorage
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem("token", token);
+    } else {
+      localStorage.removeItem("token");
+    }
+  }, [token]);
+
   return (
-    <div className="w-full min-h-screen bg-gray-50 flex flex-col items-center p-6">
-      <header className="w-full max-w-4xl text-center py-6">
-        <h1 className="text-3xl font-bold text-green-700 mb-2">
-          ContractSage
-        </h1>
-        <p className="text-gray-600 text-lg">
-          AI-Powered Legal Document Analyzer & Fraud Detection
-        </p>
-      </header>
-
-      <main className="w-full max-w-4xl space-y-6">
-        <div className="bg-white shadow-md rounded-2xl p-6">
-          <FileUpload />
-        </div>
-
-        <div className="bg-white shadow-md rounded-2xl p-6">
-          <SummaryDisplay />
-        </div>
-      </main>
-    </div>
+    <>
+      <ToastContainer />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute token={token}>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/auth" element={<AuthPage />}>
+            <Route
+              path="login"
+              element={<Login onLogin={(tok) => setToken(tok)} />}
+            />
+            <Route path="register" element={<Register />} />
+          </Route>
+        </Routes>
+      </Router>
+    </>
   );
 }
 

@@ -14,8 +14,8 @@
 # # #     Returns:
 # # #         Generated summary text
 # # #     """
-# # #     from config import config
-# # #     from model import model_manager
+# # #     from .config import config
+# # #     from .model import model_manager
     
 # # #     logger.info("Generating summary with LLM")
     
@@ -59,8 +59,8 @@
 # # logger = logging.getLogger(__name__)
 
 # # def generate_summary(prompt: str) -> str:
-# #     from config import config
-# #     from model import model_manager
+# #     from .config import config
+# #     from .model import model_manager
     
 # #     logger.info('Generating summary with LLM')
 # #     try:
@@ -152,8 +152,8 @@
 # logger = logging.getLogger(__name__)
 
 # def generate_summary(prompt: str) -> str:
-#     from config import config
-#     from model import model_manager
+#     from .config import config
+#     from .model import model_manager
 #     logger.info('Generating summary with LLM')
 #     try:
 #         device = config.device
@@ -224,8 +224,8 @@
 import torch
 from typing import Dict, Any
 import logging
-from config import config
-from model import model_manager
+from .config import config
+from .model import model_manager
 
 logger = logging.getLogger(__name__)
 

@@ -156,41 +156,6 @@
 
 # # config = AppConfig()
 
-# from dataclasses import dataclass, field
-# from typing import List, Optional
-# import os
-
-# @dataclass
-# class AppConfig:
-#     SEGMENTATION_MODEL_PATH: str = 'law-ai/InLegalBERT'
-#     LLM_MODEL_PATH: str = 'varma007ut/Indian_Legal_Assitant'  # Changed
-#     LLM_ADAPTER_PATH: str = None  # Changed (no adapter needed)
-#     NER_MODEL_PATH: str = 'FacebookAI/xlm-roberta-base'
-#     POS_TAGGER_MODEL: str = 'vblagoje/bert-english-uncased-finetuned-pos'
-#     USE_CUDA: bool = True
-#     USE_MPS: bool = True
-#     MAX_TOKENS: int = 512
-#     TEMPERATURE: float = 0.7
-#     BATCH_SIZE: int = 8
-#     SEGMENT_LABELS: List[str] = field(default_factory=lambda: ['FACTS', 'ARGUMENTS', 'STATUTE', 'PRECEDENT', 'RATIO', 'RULING', 'OTHER'])
-
-#     @property
-#     def device(self) -> str:
-#         import torch
-#         if self.USE_CUDA and torch.cuda.is_available():
-#             return 'cuda'
-#         elif self.USE_MPS and hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
-#             return 'mps'
-#         else:
-#             return 'cpu'
-        
-#     @property
-#     def device_map(self) -> str:
-#         """For LLM model loading with accelerate"""
-#         return 'auto' if self.USE_CUDA or self.USE_MPS else 'cpu'
-
-# config = AppConfig()
-
 from dataclasses import dataclass, field
 from typing import List, Optional
 import os
@@ -198,27 +163,62 @@ import os
 @dataclass
 class AppConfig:
     SEGMENTATION_MODEL_PATH: str = 'law-ai/InLegalBERT'
-    LLM_MODEL_PATH: str = 'mistralai/Mistral-7B-v0.1'  # Using reliable base model
-    LLM_ADAPTER_PATH: str = 'ajay-drew/Mistral-7B-Indian-Law'  # Indian legal adapter
+    LLM_MODEL_PATH: str = 'varma007ut/Indian_Legal_Assitant'  # Changed
+    LLM_ADAPTER_PATH: str = None  # Changed (no adapter needed)
     NER_MODEL_PATH: str = 'FacebookAI/xlm-roberta-base'
     POS_TAGGER_MODEL: str = 'vblagoje/bert-english-uncased-finetuned-pos'
-    USE_CUDA: bool = False  # Disabled for Apple Silicon
+    USE_CUDA: bool = True
     USE_MPS: bool = True
-    MAX_TOKENS: int = 512  # Reduced for memory safety
+    MAX_TOKENS: int = 512
     TEMPERATURE: float = 0.7
-    BATCH_SIZE: int = 4  # Reduced batch size
-    OFFLOAD_FOLDER: str = './offload'  # For memory management
+    BATCH_SIZE: int = 8
     SEGMENT_LABELS: List[str] = field(default_factory=lambda: ['FACTS', 'ARGUMENTS', 'STATUTE', 'PRECEDENT', 'RATIO', 'RULING', 'OTHER'])
 
     @property
     def device(self) -> str:
         import torch
-        if self.USE_MPS and hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+        if self.USE_CUDA and torch.cuda.is_available():
+            return 'cuda'
+        elif self.USE_MPS and hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
             return 'mps'
-        return 'cpu'
-
+        else:
+            return 'cpu'
+        
     @property
     def device_map(self) -> str:
-        return 'auto'
+        """For LLM model loading with accelerate"""
+        return 'auto' if self.USE_CUDA or self.USE_MPS else 'cpu'
 
 config = AppConfig()
+
+# from dataclasses import dataclass, field
+# from typing import List, Optional
+# import os
+
+# @dataclass
+# class AppConfig:
+#     SEGMENTATION_MODEL_PATH: str = 'law-ai/InLegalBERT'
+#     LLM_MODEL_PATH: str = 'mistralai/Mistral-7B-v0.1'  # Using reliable base model
+#     LLM_ADAPTER_PATH: str = 'ajay-drew/Mistral-7B-Indian-Law'  # Indian legal adapter
+#     NER_MODEL_PATH: str = 'FacebookAI/xlm-roberta-base'
+#     POS_TAGGER_MODEL: str = 'vblagoje/bert-english-uncased-finetuned-pos'
+#     USE_CUDA: bool = False  # Disabled for Apple Silicon
+#     USE_MPS: bool = True
+#     MAX_TOKENS: int = 512  # Reduced for memory safety
+#     TEMPERATURE: float = 0.7
+#     BATCH_SIZE: int = 4  # Reduced batch size
+#     OFFLOAD_FOLDER: str = './offload'  # For memory management
+#     SEGMENT_LABELS: List[str] = field(default_factory=lambda: ['FACTS', 'ARGUMENTS', 'STATUTE', 'PRECEDENT', 'RATIO', 'RULING', 'OTHER'])
+
+#     @property
+#     def device(self) -> str:
+#         import torch
+#         if self.USE_MPS and hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+#             return 'mps'
+#         return 'cpu'
+
+#     @property
+#     def device_map(self) -> str:
+#         return 'auto'
+
+# config = AppConfig()
